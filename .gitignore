@@ -14,7 +14,7 @@ Makefile
 MYMETA.yml
 pm_to_blib
 /MYMETA.json
-/Footprintless*.tar.gz
-/Footprintless*
+/Footprintless-Plugin-Atlassian-Confluence*.tar.gz
+/Footprintless-Plugin-Atlassian-Confluence*
 /*.html
 /*.tmp

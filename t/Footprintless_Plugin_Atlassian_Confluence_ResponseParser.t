@@ -6,7 +6,7 @@ use lib 't/lib';
 use File::Basename;
 use File::Spec;
 use HTTP::Response;
-use Test::More tests => 5;
+use Test::More tests => 3;
 
 BEGIN {use_ok('Footprintless::Plugin::Atlassian::Confluence::ResponseParser')}
 

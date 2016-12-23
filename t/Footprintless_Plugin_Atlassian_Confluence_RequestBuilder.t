@@ -36,7 +36,7 @@ is($request_builder->get_content(id => '1234')->url(),
     'get_content id only');
 is($request_builder->get_content(
         id => '1234', expand => 'space,body.view,version,container')->url(),
-    "$base_url/rest/api/content/1234?expand=space,body.view,version,container",
+    "$base_url/rest/api/content/1234?expand=space%2Cbody.view%2Cversion%2Ccontainer",
     'get_content id and expand');
 is($request_builder
     ->get_content(
@@ -44,7 +44,7 @@ is($request_builder
         id => '1234', 
         status => 'any')
     ->url(),
-    "$base_url/rest/api/content/1234?expand=space,body.view,version,container&status=any",
+    "$base_url/rest/api/content/1234?expand=space%2Cbody.view%2Cversion%2Ccontainer&status=any",
     'get_content id, expand and status');
 is($request_builder
     ->get_content(
@@ -52,5 +52,5 @@ is($request_builder
         spaceKey => 'Foo', 
         title => 'Bar')
     ->url(),
-    "$base_url/rest/api/content?expand=space,body.view,version,container&spaceKey=Foo&title=Bar",
+    "$base_url/rest/api/content?expand=space%2Cbody.view%2Cversion%2Ccontainer&spaceKey=Foo&title=Bar",
     'get_content spaceKey, title, and expand');
