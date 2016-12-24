@@ -94,6 +94,40 @@ sub request {
     return $response;
 }
 
+sub request_all {
+    my ($self, $endpoint, $args, @response_options) = @_;
+
+    my $response = $self->request($endpoint, 
+        [
+            @$args,
+            limit => 100,
+            start => 0
+        ],
+        @response_options);
+
+    my $next = $response;
+    while ($next->{success} && $next->{content}{_links}{next}) {
+        my $limit = $response->{content}{limit};
+        $next = $self->request($endpoint, 
+            [
+                @$args, 
+                limit => $limit,
+                start => $next->{content}{start} + $limit,
+            ], 
+            @response_options);
+        push(@{$response->{content}{results}},
+            @{$next->{content}{results}});
+    }
+
+    delete($response->{content}{_links}{next});
+    $response->{content}{limit} = scalar(@{$response->{content}{results}});
+    $response->{content}{size} = $response->{content}{limit};
+    $response->{content}{start} = 0;
+
+    return $response;
+}
+
+
 sub _web_url {
     my ($self) = @_;
     my $web = $self->_sub_entity('web', 1);
@@ -186,6 +220,13 @@ Generates a request by calling a method named C<$endpoint> on the request
 builder, supplying it with C<@args>.  The request is sent using the agent,
 and the response is parsed by calling a method named C<$endpoint> on the
 response parser, supplying it with C<%response_options>.
+
+=method request_all($endpoint, \@args, %response_options)
+
+Same as L<request/request($endpoint, \@args, %response_options)> except
+that it will loop through I<all> pages until all results have been 
+returned.  This method assumes that the last argument to request builder
+will be an options hash that will be used as query parameters.
 
 =head1 SEE ALSO
 
