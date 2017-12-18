@@ -36,9 +36,11 @@ my $test_dir = dirname( File::Spec->rel2abs( $0 ) );
 sub with_footprintless {
     my ($httpd_handler, $callback, %options) = @_;
 
+    my $port = int(rand(10000))+49152;
     my $pid = fork();
     if ($pid == 0) {
-        my $httpd = HTTP::Daemon->new( LocalPort => 22358 ) || die('unable to create daemon');
+        print STDERR "Starting server...\n";
+        my $httpd = HTTP::Daemon->new( LocalPort => $port ) || die('unable to create daemon: ' . $! );
         while (my $connection = $httpd->accept()) {
             while (my $request = $connection->get_request()) {
                 if ($request->method() eq 'GET'
@@ -56,7 +58,7 @@ sub with_footprintless {
     }
     else {
         eval {
-            my $url = 'http://localhost:22358/';
+            my $url = "http://localhost:$port/";
             my $uri = URI->new($url);
 
             my $count = 0;
