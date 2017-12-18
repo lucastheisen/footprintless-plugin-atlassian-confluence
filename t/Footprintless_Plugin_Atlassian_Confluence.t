@@ -25,7 +25,7 @@ eval {
     );
 
     require Log::Any::Adapter;
-    Log::Any::Adapter->set('Stdout', 
+    Log::Any::Adapter->set('Stdout',
         log_level => Log::Any::Adapter::Util::numeric_level($level));
 };
 
@@ -36,16 +36,18 @@ my $test_dir = dirname( File::Spec->rel2abs( $0 ) );
 sub with_footprintless {
     my ($httpd_handler, $callback, %options) = @_;
 
-    my $httpd = HTTP::Daemon->new() || die('unable to create daemon');
     my $pid = fork();
     if ($pid == 0) {
+        my $httpd = HTTP::Daemon->new( LocalPort => 22358 ) || die('unable to create daemon');
         while (my $connection = $httpd->accept()) {
             while (my $request = $connection->get_request()) {
-                if ($request->method() eq 'GET' 
+                if ($request->method() eq 'GET'
                     && $request->uri()->path() eq "/running") {
                     $connection->send_status_line();
                 }
-                &$httpd_handler($connection, $request);
+                else {
+                    &$httpd_handler($connection, $request);
+                }
             }
             $connection->close();
             undef($connection);
@@ -54,14 +56,15 @@ sub with_footprintless {
     }
     else {
         eval {
-            my $url = $httpd->url();
+            my $url = 'http://localhost:22358/';
             my $uri = URI->new($url);
 
             my $count = 0;
             my $agent = agent(timeout => 1);
-            while ($count < 5 
+            while ($count < 5
                 && !$agent->get($url . 'running')->is_success()) {
                 $logger->tracef("not running: ", $count++, "\n");
+                sleep( 1 );
             }
             die('httpd never started') unless ($count < 5);
 
@@ -84,11 +87,11 @@ sub with_footprintless {
                         ],
                         'Footprintless::Plugin::Atlassian::Confluence' => {
                             ($options{request_builder_module}
-                                ? (request_builder_module => 
+                                ? (request_builder_module =>
                                     $options{request_builder_module})
                                 : ()),
                             ($options{response_parser_module}
-                                ? (response_parser_module => 
+                                ? (response_parser_module =>
                                     $options{response_parser_module})
                                 : ()),
                         }
@@ -111,7 +114,7 @@ sub with_footprintless {
     ok(with_footprintless(
             sub {
                 my ($connection, $request) = @_;
-                if ($request->method() eq 'GET' 
+                if ($request->method() eq 'GET'
                     && $request->uri()->path() eq "/rest/api/content/123") {
                     $connection->send_status_line();
                 }
@@ -142,11 +145,11 @@ sub with_footprintless {
 
         sub get_content {
             my ($self, %options) = @_;
-            return HTTP::Request->new('GET', 
+            return HTTP::Request->new('GET',
                 "$self->{url}/foobar/$options{id}");
         }
 
-        $INC{'Foobar/RequestBuilder.pm'} = 
+        $INC{'Foobar/RequestBuilder.pm'} =
             '/dev/null/Foobar/RequestBuilder.pm';
     }
 
@@ -154,7 +157,7 @@ sub with_footprintless {
             sub {
                 my ($connection, $request) = @_;
                 $logger->debugf('request: %s', $request);
-                if ($request->method() eq 'GET' 
+                if ($request->method() eq 'GET'
                     && $request->uri()->path() eq "/foobar/123") {
                     $connection->send_status_line();
                 }
